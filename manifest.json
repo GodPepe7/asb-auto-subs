@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "ASB Auto Subs",
+  "description": "Let me cook",
+  "version": "1.0",
+  "background": {
+    "service_worker": "dist/bundle.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": "imgs/takodachi.png"
+  }
+}
