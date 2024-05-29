@@ -6,18 +6,9 @@
   "background": {
     "service_worker": "dist/background.js"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "*://*/*"
-      ],
-      "js": [
-        "dist/popup.js"
-      ]
-    }
-  ],
   "permissions": [
     "activeTab",
+    "scripting",
     "downloads"
   ],
   "host_permissions": [
