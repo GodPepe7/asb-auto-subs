@@ -9,13 +9,20 @@ type JimakuEntry = {
   id: number
 }
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+async function alreadyVisited(url: string) {
+  const result = await chrome.storage.local.get(url)
+  if (Object.keys(result).length > 0) return true
+  await chrome.storage.local.set({ [url]: true })
+  return false
+}
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
   if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
-    console.log("visited hianime")
+    const visited = await alreadyVisited(tab.url)
+    if (visited) return
     // Inject content script into the tab
     chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
-      .then(() => console.log("injected script file"));
   }
 });
 
@@ -36,23 +43,27 @@ async function fetchSubs(title: string, episode: number) {
       return null
     }
     const jimakuEntry: JimakuEntry[] = await searchResponse.json()
-    if (!jimakuEntry) {
+    if (jimakuEntry.length === 0) {
       console.error(`no entries found for ${title}`)
       return null
     }
     const id = jimakuEntry[0].id
-    const response = await fetch(BASE_URL + `/entries/${id}/files?episode=${episode}`, {
+    const filesResponse = await fetch(BASE_URL + `/entries/${id}/files?episode=${episode}`, {
       method: 'GET',
       headers: {
         'Authorization': `${JIMAKU}`
       }
     })
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${searchResponse.status}`)
+    if (!filesResponse.ok) {
+      console.error(`HTTP error! status: ${filesResponse.status}`)
       return null
     }
-    const data: Subs[] = await response.json();
-    return data
+    const subs: Subs[] = await filesResponse.json();
+    if (subs.length === 0) {
+      console.error(`no entries found for ${title} episode ${episode}`)
+      return null
+    }
+    return subs
   } catch (e) {
     if (typeof e === "string") {
       e.toUpperCase()
@@ -68,7 +79,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const subs = await fetchSubs(message.animeTitle, message.episode)
       if (!subs) {
-        sendResponse({ success: false, error: "fetching error" });
         return
       }
       chrome.downloads.download({
@@ -80,7 +90,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           console.error('Download failed:', chrome.runtime.lastError);
           sendResponse({ success: false, error: chrome.runtime.lastError.message });
         } else {
-          console.log('Download started:', downloadId);
           sendResponse({ success: true, downloadId: downloadId });
         }
       })
