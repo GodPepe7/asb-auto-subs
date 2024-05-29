@@ -4,13 +4,27 @@
   "description": "Let me cook",
   "version": "1.0",
   "background": {
-    "service_worker": "dist/bundle.js"
+    "service_worker": "dist/background.js"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "dist/popup.js"
+      ]
+    }
+  ],
   "permissions": [
-    "storage"
+    "activeTab",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://*/"
   ],
   "action": {
-    "default_popup": "src/popup.html",
+    "default_popup": "dist/popup.html",
     "default_icon": "imgs/takodachi.png"
   }
 }

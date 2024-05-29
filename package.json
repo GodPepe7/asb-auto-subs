@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/GodPepe7/asb-auto-subs#readme",
   "devDependencies": {
+    "@types/chrome": "^0.0.268",
     "chrome-types": "^0.1.285",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",

@@ -1,7 +1,12 @@
 const path = require('path');
+const outputPath = 'dist';
+const entryPoints = {
+  popup: './src/popup.ts',
+  background: './src/background.ts'
+};
 
 module.exports = {
-  entry: './src/popup.ts',
+  entry: entryPoints,
   module: {
     rules: [
       {
@@ -15,7 +20,7 @@ module.exports = {
     extensions: ['.ts', '.js']
   },
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist')
+    filename: '[name].js',
+    path: path.resolve(__dirname, outputPath)
   }
 };
