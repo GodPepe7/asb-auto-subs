@@ -17,22 +17,11 @@ type AnilistObject = {
   }
 }
 
-async function alreadyVisited(url: string) {
-  const result = await chrome.storage.local.get(url)
-  if (Object.keys(result).length > 0) return true
-  await chrome.storage.local.set({ [url]: true })
-  return false
-}
-
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
   if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
-    const visited = await alreadyVisited(tab.url)
-    if (visited) {
-      console.log("already visited, not fetching subs")
-      return
-    }
-    chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
+    console.log("injecting script")
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
   }
 });
 
@@ -124,27 +113,29 @@ async function fetchSubs(anilistId: number, episode: number) {
   }
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+function markAsDownloaded(filename: string) {
+
+}
+
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'getSubs') {
-    (async () => {
-      const anilistId = await fetchAnilistId(message.animeTitle)
-      if (!anilistId) return
-      const subs = await fetchSubs(anilistId, message.episode)
-      if (!subs) {
-        return
+    const anilistId = await fetchAnilistId(message.animeTitle)
+    if (!anilistId) return
+    const subs = await fetchSubs(anilistId, message.episode)
+    if (!subs) {
+      return
+    }
+    chrome.downloads.download({
+      url: subs[0].url,
+      filename: subs[0].name,
+      saveAs: false
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        console.error('Download failed:', chrome.runtime.lastError);
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true, downloadId: downloadId });
       }
-      chrome.downloads.download({
-        url: subs[0].url,
-        filename: subs[0].name,
-        saveAs: false
-      }, (downloadId) => {
-        if (chrome.runtime.lastError) {
-          console.error('Download failed:', chrome.runtime.lastError);
-          sendResponse({ success: false, error: chrome.runtime.lastError.message });
-        } else {
-          sendResponse({ success: true, downloadId: downloadId });
-        }
-      })
-    })()
+    })
   }
 })
