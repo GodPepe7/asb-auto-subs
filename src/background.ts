@@ -9,6 +9,14 @@ type JimakuEntry = {
   id: number
 }
 
+type AnilistObject = {
+  data: {
+    Media: {
+      id: number
+    }
+  }
+}
+
 async function alreadyVisited(url: string) {
   const result = await chrome.storage.local.get(url)
   if (Object.keys(result).length > 0) return true
@@ -20,19 +28,61 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
   if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
     const visited = await alreadyVisited(tab.url)
-    if (visited) return
-    // Inject content script into the tab
+    if (visited) {
+      console.log("already visited, not fetching subs")
+      return
+    }
     chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
   }
 });
 
-const JIMAKU = "AAAAAAAAAJ4uAS4uQO_LdGQ5XalZvDYLqb2YuYxn6LBCVW3nx-sFwpBywA"
-const BASE_URL = "https://jimaku.cc/api"
-
-async function fetchSubs(title: string, episode: number) {
+async function fetchAnilistId(title: string) {
+  console.log("fetching anilist id...")
+  const query = `
+  query ($title: String) {
+    Media (search: $title, type: ANIME) {
+      id
+    }
+  }
+  `;
+  const url = 'https://graphql.anilist.co'
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      query: query,
+      variables: { title: title }
+    })
+  };
   try {
-    const encodedSearchQuery = encodeURIComponent(title)
-    const searchResponse = await fetch(`${BASE_URL}/entries/search?query=${encodedSearchQuery}`, {
+    const anilistResponse = await fetch(url, options)
+    if (!anilistResponse.ok) {
+      console.error(`HTTP error! status: ${anilistResponse.status}`)
+      return null
+    }
+    const anilistObject: AnilistObject = await anilistResponse.json()
+    console.log("fetched: " + anilistObject.data.Media.id)
+    return anilistObject.data.Media.id
+  } catch (e) {
+    if (typeof e === "string") {
+      e.toUpperCase()
+    } else if (e instanceof Error) {
+      console.error(e.message)
+    }
+    return null
+  }
+}
+
+
+async function fetchSubs(anilistId: number, episode: number) {
+  console.log("fetching subs...")
+  const JIMAKU = "AAAAAAAAAJ4uAS4uQO_LdGQ5XalZvDYLqb2YuYxn6LBCVW3nx-sFwpBywA"
+  const BASE_URL = "https://jimaku.cc/api"
+  try {
+    const searchResponse = await fetch(`${BASE_URL}/entries/search?anilist_id=${anilistId}`, {
       method: 'GET',
       headers: {
         'Authorization': `${JIMAKU}`
@@ -44,7 +94,7 @@ async function fetchSubs(title: string, episode: number) {
     }
     const jimakuEntry: JimakuEntry[] = await searchResponse.json()
     if (jimakuEntry.length === 0) {
-      console.error(`no entries found for ${title}`)
+      console.error(`no entries found for ${anilistId}`)
       return null
     }
     const id = jimakuEntry[0].id
@@ -60,7 +110,7 @@ async function fetchSubs(title: string, episode: number) {
     }
     const subs: Subs[] = await filesResponse.json();
     if (subs.length === 0) {
-      console.error(`no entries found for ${title} episode ${episode}`)
+      console.error(`no entries found for ${anilistId} episode ${episode}`)
       return null
     }
     return subs
@@ -77,7 +127,9 @@ async function fetchSubs(title: string, episode: number) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getSubs') {
     (async () => {
-      const subs = await fetchSubs(message.animeTitle, message.episode)
+      const anilistId = await fetchAnilistId(message.animeTitle)
+      if (!anilistId) return
+      const subs = await fetchSubs(anilistId, message.episode)
       if (!subs) {
         return
       }
