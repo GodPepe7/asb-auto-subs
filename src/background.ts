@@ -113,27 +113,43 @@ async function fetchSubs(anilistId: number, episode: number) {
   }
 }
 
-function markAsDownloaded(filename: string) {
-
+async function markMultipleAsDownloaded(filename: string, title: string) {
+  const rangePattern = /\d+[-~]\d+/;
+  const match = filename.match(rangePattern);
+  if (!match) return
+  const episodeRange = match[0];
+  let episodes
+  if (episodeRange.includes("-")) {
+    episodes = episodeRange.split("-").map(episode => parseInt(episode))
+  } else {
+    episodes = episodeRange.split("~").map(episode => parseInt(episode))
+  }
+  for (let i = episodes[0]; i < episodes[1]; i++) {
+    const key = `${title}_${i}`
+    await chrome.storage.local.set({ [key]: true })
+  }
 }
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'getSubs') {
-    const anilistId = await fetchAnilistId(message.animeTitle)
+    const { animeTitle, episode } = message
+    const anilistId = await fetchAnilistId(animeTitle)
     if (!anilistId) return
-    const subs = await fetchSubs(anilistId, message.episode)
+    const subs = await fetchSubs(anilistId, episode)
     if (!subs) {
       return
     }
+    const { url, name } = subs[0]
     chrome.downloads.download({
-      url: subs[0].url,
-      filename: subs[0].name,
+      url,
+      filename: name,
       saveAs: false
     }, (downloadId) => {
       if (chrome.runtime.lastError) {
         console.error('Download failed:', chrome.runtime.lastError);
         sendResponse({ success: false, error: chrome.runtime.lastError.message });
       } else {
+        if (subs[0].name.endsWith(".zip")) markMultipleAsDownloaded(name, animeTitle)
         sendResponse({ success: true, downloadId: downloadId });
       }
     })
