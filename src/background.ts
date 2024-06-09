@@ -31,7 +31,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 async function fetchAnilistId(title: string) {
-  console.log("fetching anilist id...")
   const query = `
   query ($title: String) {
     Media (search: $title, type: ANIME) {
@@ -54,11 +53,9 @@ async function fetchAnilistId(title: string) {
   try {
     const anilistResponse = await fetch(url, options)
     if (!anilistResponse.ok) {
-      console.error(`HTTP error! status: ${anilistResponse.status}`)
       return null
     }
     const anilistObject: AnilistObject = await anilistResponse.json()
-    console.log("fetched: " + anilistObject.data.Media.id)
     return anilistObject.data.Media.id
   } catch (e) {
     if (typeof e === "string") {
@@ -72,7 +69,6 @@ async function fetchAnilistId(title: string) {
 
 
 async function fetchSubs(anilistId: number, episode: number) {
-  console.log("fetching subs...")
   const JIMAKU = "AAAAAAAAAJ4uAS4uQO_LdGQ5XalZvDYLqb2YuYxn6LBCVW3nx-sFwpBywA"
   const BASE_URL = "https://jimaku.cc/api"
   try {
@@ -138,12 +134,10 @@ async function markMultipleAsDownloaded(filename: string, title: string) {
 async function getSubsHandler(animeTitle: string, episode: number) {
   const anilistId = await fetchAnilistId(animeTitle)
   if (!anilistId) {
-    console.log("sending response to script")
     return { success: false, error: `Couldn't find anime named "${animeTitle}"` };
   }
   const subs = await fetchSubs(anilistId, episode)
   if (!subs) {
-    console.log("sending response to script")
     return { success: false, error: `No subs found for ${animeTitle} Episode ${episode}` }
   }
   const { url, name } = subs[0]
@@ -153,22 +147,19 @@ async function getSubsHandler(animeTitle: string, episode: number) {
     saveAs: false
   }, async (downloadId) => {
     if (chrome.runtime.lastError) {
-      console.error('Download failed:', chrome.runtime.lastError);
       return { success: false, error: chrome.runtime.lastError.message };
-    } else {
-      if (subs[0].name.endsWith(".zip")) await markMultipleAsDownloaded(name, animeTitle)
-      return { success: true, error: null };
+    }
+    if (subs[0].name.endsWith(".zip")) {
+      await markMultipleAsDownloaded(name, animeTitle);
     }
   })
+  return { success: true, error: null };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getSubs') {
     const { animeTitle, episode } = message
-    getSubsHandler(animeTitle, episode).then(response => {
-      console.log(response)
-      sendResponse(response)
-    })
+    getSubsHandler(animeTitle, episode).then(response => sendResponse(response))
     return true
   }
 })
