@@ -18,5 +18,15 @@
   "action": {
     "default_popup": "dist/popup.html",
     "default_icon": "imgs/takodachi.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "css/index.css"
+      ],
+      "matches": [
+        "https://hianime.to/*"
+      ]
+    }
+  ]
 }

@@ -17,10 +17,15 @@ type AnilistObject = {
   }
 }
 
+type getSubsResponse = {
+  success: boolean
+  error: string
+}
+
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
   if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
-    console.log("injecting script")
+    await chrome.scripting.insertCSS({ target: { tabId }, files: ["css/index.css"] })
     await chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
   }
 });
@@ -130,28 +135,40 @@ async function markMultipleAsDownloaded(filename: string, title: string) {
   }
 }
 
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+async function getSubsHandler(animeTitle: string, episode: number) {
+  const anilistId = await fetchAnilistId(animeTitle)
+  if (!anilistId) {
+    console.log("sending response to script")
+    return { success: false, error: `Couldn't find anime named "${animeTitle}"` };
+  }
+  const subs = await fetchSubs(anilistId, episode)
+  if (!subs) {
+    console.log("sending response to script")
+    return { success: false, error: `No subs found for ${animeTitle} Episode ${episode}` }
+  }
+  const { url, name } = subs[0]
+  chrome.downloads.download({
+    url,
+    filename: name,
+    saveAs: false
+  }, async (downloadId) => {
+    if (chrome.runtime.lastError) {
+      console.error('Download failed:', chrome.runtime.lastError);
+      return { success: false, error: chrome.runtime.lastError.message };
+    } else {
+      if (subs[0].name.endsWith(".zip")) await markMultipleAsDownloaded(name, animeTitle)
+      return { success: true, error: null };
+    }
+  })
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getSubs') {
     const { animeTitle, episode } = message
-    const anilistId = await fetchAnilistId(animeTitle)
-    if (!anilistId) return
-    const subs = await fetchSubs(anilistId, episode)
-    if (!subs) {
-      return
-    }
-    const { url, name } = subs[0]
-    chrome.downloads.download({
-      url,
-      filename: name,
-      saveAs: false
-    }, (downloadId) => {
-      if (chrome.runtime.lastError) {
-        console.error('Download failed:', chrome.runtime.lastError);
-        sendResponse({ success: false, error: chrome.runtime.lastError.message });
-      } else {
-        if (subs[0].name.endsWith(".zip")) markMultipleAsDownloaded(name, animeTitle)
-        sendResponse({ success: true, downloadId: downloadId });
-      }
+    getSubsHandler(animeTitle, episode).then(response => {
+      console.log(response)
+      sendResponse(response)
     })
+    return true
   }
 })
