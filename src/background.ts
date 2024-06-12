@@ -23,6 +23,9 @@ type getSubsResponse = {
 }
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (tab.url === undefined || tab.status === "loading") {
+    return
+  }
   const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
   if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
     await chrome.scripting.insertCSS({ target: { tabId }, files: ["css/index.css"] })
