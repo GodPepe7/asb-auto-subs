@@ -22,11 +22,6 @@ type getTitleAndEpResponse = {
   episode: number
 }
 
-type getSubsResponse = {
-  success: boolean | null
-  error: string
-}
-
 async function alreadyDownloaded(url: string) {
   const result = await chrome.storage.local.get([url])
   console.dir(result)

@@ -1,4 +1,4 @@
-#subs-toast {
+.subs-toast {
   visibility: hidden;
   min-width: 250px;
   margin-left: -125px;
@@ -13,7 +13,7 @@
   bottom: 100px;
 }
 
-#subs-toast.show {
+.subs-toast.show {
   visibility: visible;
   animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
