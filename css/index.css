@@ -13,14 +13,6 @@
   bottom: 100px;
 }
 
-#subs-toast.error {
-  background-color: #9b0f0fd3;
-}
-
-#subs-toast.success {
-  background-color: #0f7a14c7;
-}
-
 #subs-toast.show {
   visibility: visible;
   animation: fadein 0.5s, fadeout 0.5s 2.5s;

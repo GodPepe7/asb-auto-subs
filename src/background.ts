@@ -17,19 +17,50 @@ type AnilistObject = {
   }
 }
 
+type getTitleAndEpResponse = {
+  animeTitle: string
+  episode: number
+}
+
 type getSubsResponse = {
-  success: boolean
+  success: boolean | null
   error: string
 }
 
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (tab.url === undefined || tab.status === "loading") {
-    return
-  }
-  const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
-  if (changeInfo.status === 'complete' && tab.url && hianimePattern.test(tab.url)) {
-    await chrome.scripting.insertCSS({ target: { tabId }, files: ["css/index.css"] })
-    await chrome.scripting.executeScript({ target: { tabId }, files: ['dist/popup.js'] })
+async function alreadyDownloaded(url: string) {
+  const result = await chrome.storage.local.get([url])
+  console.dir(result)
+  if (Object.keys(result).length > 0) return true
+  await chrome.storage.local.set({ [url]: true })
+  return false
+}
+
+chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+  console.log("history updated")
+  if (details.frameId === 0) {
+    chrome.tabs.get(details.tabId, async (tab) => {
+      console.log("got tab")
+      if (tab.url !== details.url) return
+      console.log("got exact tab")
+      const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
+      if (!hianimePattern.test(tab.url)) return
+      console.log("inserting scripts")
+      await chrome.scripting.insertCSS({ target: { tabId: details.tabId }, files: ["css/index.css"] })
+      await chrome.scripting.executeScript({ target: { tabId: details.tabId }, files: ['dist/popup.js'] })
+      console.log("checking if downloaded already")
+      const hasAlreadyBeenDownloaded = await alreadyDownloaded(tab.url)
+      if (hasAlreadyBeenDownloaded) {
+        console.log("already exists")
+        await chrome.tabs.sendMessage(details.tabId, { action: 'alreadyDownloadedInfo' })
+        return
+      }
+      console.log("getting title and ep")
+      const { animeTitle, episode }: getTitleAndEpResponse = await chrome.tabs.sendMessage(details.tabId, { action: 'getTitleAndEp' })
+      console.log("Got: " + animeTitle + " " + episode)
+      const error = await getSubs(animeTitle, episode)
+      console.log("notifying user...")
+      await chrome.tabs.sendMessage(details.tabId, { action: 'notifyUser', error })
+    });
   }
 });
 
@@ -134,35 +165,27 @@ async function markMultipleAsDownloaded(filename: string, title: string) {
   }
 }
 
-async function getSubsHandler(animeTitle: string, episode: number) {
+async function getSubs(animeTitle: string, episode: number) {
   const anilistId = await fetchAnilistId(animeTitle)
   if (!anilistId) {
-    return { success: false, error: `Couldn't find anime named "${animeTitle}"` };
+    return `Couldn't find anime named "${animeTitle}"`;
   }
   const subs = await fetchSubs(anilistId, episode)
   if (!subs) {
-    return { success: false, error: `No subs found for ${animeTitle} Episode ${episode}` }
+    return `No subs found for ${animeTitle} Episode ${episode}`;
   }
   const { url, name } = subs[0]
   chrome.downloads.download({
     url,
     filename: name,
     saveAs: false
-  }, async (downloadId) => {
+  }, async () => {
     if (chrome.runtime.lastError) {
-      return { success: false, error: chrome.runtime.lastError.message };
+      return chrome.runtime.lastError.message;
     }
     if (subs[0].name.endsWith(".zip")) {
       await markMultipleAsDownloaded(name, animeTitle);
     }
   })
-  return { success: true, error: null };
+  return null;
 }
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'getSubs') {
-    const { animeTitle, episode } = message
-    getSubsHandler(animeTitle, episode).then(response => sendResponse(response))
-    return true
-  }
-})
