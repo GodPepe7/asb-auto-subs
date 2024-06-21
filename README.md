@@ -1,6 +1,6 @@
 # ASB Auto Subs
 
-A small chrome extension using the jimaku.cc API to automatically download japanese subtitles of the anime episode you are currently watching. Works only on hianime.tv for now.
+A small chrome extension using the jimaku.cc API to automatically download japanese subtitles of the anime episode you are currently watching. Works only on hianime.to for now.
 
 # To Do
 
