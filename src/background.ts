@@ -1,3 +1,5 @@
+import { animeSites } from "./animeSites"
+
 type Subs = {
   url: string
   name: string
@@ -17,17 +19,40 @@ type AnilistObject = {
   }
 }
 
-type getTitleAndEpResponse = {
+type TitleAndEp = {
   animeTitle: string
   episode: number
 }
 
-async function alreadyDownloaded(url: string) {
-  const result = await chrome.storage.local.get([url])
-  console.dir(result)
+async function alreadyDownloaded(title: string, episode: number) {
+  const key = `${title}_${episode}`
+  const result = await chrome.storage.local.get([key])
+  console.log(result)
   if (Object.keys(result).length > 0) return true
-  await chrome.storage.local.set({ [url]: true })
+  await chrome.storage.local.set({ [key]: true })
   return false
+}
+
+function hasOpenedEpisode(url: string) {
+  const baseDomainMatcher = /^(?:https?:\/\/)?(?:www\.)?([^\/:?#]+)/;
+  const matches = url.match(baseDomainMatcher);
+  if (!matches) {
+    console.log("matches is null")
+    return null
+  }
+  const animeSiteBaseDomain = matches[1]
+  console.log(matches)
+  const siteSpecifics = animeSites.get(animeSiteBaseDomain)
+  if (!siteSpecifics) {
+    console.log("siteSpecifics is null")
+    return null
+  }
+  const isOnEpisodePage = siteSpecifics.epPlayerRegEx.test(url)
+  if (!isOnEpisodePage) {
+    console.log("isOnEpisodePage is null")
+    return null
+  }
+  return siteSpecifics
 }
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
@@ -37,21 +62,25 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
       console.log("got tab")
       if (tab.url !== details.url) return
       console.log("got exact tab")
-      const hianimePattern = /https:\/\/hianime\.to\/watch\/.+\?ep=.+/;
-      if (!hianimePattern.test(tab.url)) return
+      const siteSpecifics = hasOpenedEpisode(tab.url)
+      if (siteSpecifics === null) return
       console.log("inserting scripts")
       await chrome.scripting.insertCSS({ target: { tabId: details.tabId }, files: ["css/index.css"] })
       await chrome.scripting.executeScript({ target: { tabId: details.tabId }, files: ['dist/popup.js'] })
+      console.log("getting title and ep")
+      const { animeTitle, episode }: TitleAndEp = await chrome.tabs.sendMessage(details.tabId, { action: 'getTitleAndEp', siteSpecifics })
+      console.log("Got: " + animeTitle + " " + episode)
+      if (!animeTitle || !episode) {
+        console.log("something went wrong getting the title and ep from website")
+        return
+      }
       console.log("checking if downloaded already")
-      const hasAlreadyBeenDownloaded = await alreadyDownloaded(tab.url)
+      const hasAlreadyBeenDownloaded = await alreadyDownloaded(animeTitle, episode)
       if (hasAlreadyBeenDownloaded) {
         console.log("already exists")
         await chrome.tabs.sendMessage(details.tabId, { action: 'alreadyDownloadedInfo' })
         return
       }
-      console.log("getting title and ep")
-      const { animeTitle, episode }: getTitleAndEpResponse = await chrome.tabs.sendMessage(details.tabId, { action: 'getTitleAndEp' })
-      console.log("Got: " + animeTitle + " " + episode)
       const error = await getSubs(animeTitle, episode)
       console.log("notifying user...")
       await chrome.tabs.sendMessage(details.tabId, { action: 'notifyUser', error })

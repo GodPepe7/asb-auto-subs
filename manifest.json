@@ -26,7 +26,8 @@
         "css/index.css"
       ],
       "matches": [
-        "https://hianime.to/*"
+        "https://hianime.to/*",
+        "https://animesuge.to/*"
       ]
     }
   ]
