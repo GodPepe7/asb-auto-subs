@@ -1,37 +1,12 @@
-import { SiteSpecifics } from "./types";
+console.log("popup.js getting executed")
+console.log(document.body.innerHTML)
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.action) {
-    case "alreadyDownloadedInfo":
-      createToast("Subs already downloaded once", "#ff9318d3")
-      break;
-    case "getTitleAndEp":
-      const siteSpecifics: SiteSpecifics = message.siteSpecifics
-      const animeTitle = document.querySelector(siteSpecifics.titleQuery)?.textContent
-      const episodeString = document.querySelector(siteSpecifics.epQuery)?.textContent
-      if (!animeTitle || !episodeString) return
-      const episode = parseInt(episodeString)
-      sendResponse({ animeTitle, episode })
-      break;
-    case "notifyUser":
-      if (message.error) {
-        createToast(message.error, "#a51f07")
-      } else {
-        createToast("Successfully downloaded subs", "#0a9611")
-      }
-      break;
-  }
+document.getElementById('apiKeyForm')?.addEventListener('submit', async function (event) {
+  console.log("test")
+  event.preventDefault(); // Prevent the default form submission
+  const inputAPIKey = (document.getElementById('apiKey') as HTMLInputElement).value;
+  console.log(`Set API Key: ${inputAPIKey}`)
+  await chrome.storage.local.set({ apiKey: inputAPIKey })
+  const result = await chrome.storage.local.get('apiKey')
+  console.log(result["apiKey"])
 });
-
-function createToast(msg: string, color: string) {
-  const toast = document.createElement("div");
-  toast.className = "subs-toast"
-  toast.textContent = msg
-  toast.style.backgroundColor = color
-  toast.className += " show"
-  document.body.append(toast);
-  setTimeout(() => {
-    toast.className = toast.className.replace("show", "")
-    document.removeChild(toast);
-  }, 3000);
-}

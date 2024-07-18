@@ -2,7 +2,8 @@ const path = require('path');
 const outputPath = 'dist';
 const entryPoints = {
   popup: './src/popup.ts',
-  background: './src/background.ts'
+  background: './src/background.ts',
+  injectScript: './src/injectScript.ts'
 };
 
 module.exports = {
