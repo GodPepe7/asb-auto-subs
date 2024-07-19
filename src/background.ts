@@ -212,7 +212,8 @@ async function getSubs(animeTitle: string, episode: number) {
   if (typeof subs === "string") {
     return subs;
   }
-  const { url, name } = subs[0]
+  const nonZipSub = subs.find(sub => !sub.name.endsWith(".zip"))
+  const { url, name } = nonZipSub ? nonZipSub : subs[0]
   chrome.downloads.download({
     url,
     filename: name,

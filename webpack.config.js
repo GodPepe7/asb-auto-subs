@@ -6,7 +6,7 @@ const entryPoints = {
   injectScript: './src/injectScript.ts'
 };
 
-module.exports = {
+module.exports = {1
   entry: entryPoints,
   module: {
     rules: [
