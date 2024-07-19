@@ -212,8 +212,8 @@ async function getSubs(animeTitle: string, episode: number) {
   if (typeof subs === "string") {
     return subs;
   }
-  const nonZipSub = subs.find(sub => !sub.name.endsWith(".zip"))
-  const { url, name } = nonZipSub ? nonZipSub : subs[0]
+  const singleSub = subs.find(sub => !sub.name.endsWith(".zip") && !sub.name.endsWith(".rar"))
+  const { url, name } = singleSub ? singleSub : subs[0]
   chrome.downloads.download({
     url,
     filename: name,
@@ -222,7 +222,7 @@ async function getSubs(animeTitle: string, episode: number) {
     if (chrome.runtime.lastError) {
       return chrome.runtime.lastError.message;
     }
-    if (subs[0].name.endsWith(".zip")) {
+    if (name.endsWith(".zip") || name.endsWith(".rar")) {
       await markMultipleAsDownloaded(name, animeTitle);
     }
   })
