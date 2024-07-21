@@ -1,0 +1,38 @@
+name: "tagged-release"
+
+on: 
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tagged-release:
+    name: 'Tagged Release'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 'Install dependencies'
+        run: npm ci
+      
+      - name: 'Build extension'
+        run: npm run build
+      
+      - name: 'Compress to Zip'
+        run: |
+          sudo apt-get install -y zip
+          zip -r asb-auto-subs dist html css imgs manifest.json
+
+      - uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          prerelease: false
+          files: |
+            *.zip
