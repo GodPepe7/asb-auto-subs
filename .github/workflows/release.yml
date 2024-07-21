@@ -28,7 +28,7 @@ jobs:
       - name: 'Compress to Zip'
         run: |
           sudo apt-get install -y zip
-          zip -r asb-auto-subs dist css imgs manifest.json
+          zip -r asb-auto-subs dist html css imgs manifest.json
 
       - uses: 'marvinpinto/action-automatic-releases@latest'
         with:

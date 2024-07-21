@@ -17,7 +17,7 @@
     "https://*/"
   ],
   "action": {
-    "default_popup": "dist/popup.html",
+    "default_popup": "html/popup.html",
     "default_icon": "imgs/takodachi.png"
   },
   "web_accessible_resources": [
