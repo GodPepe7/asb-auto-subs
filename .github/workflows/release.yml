@@ -1,6 +1,6 @@
 name: "tagged-release"
 
-on:
+on: 
   push:
     tags:
       - "v*"
@@ -10,20 +10,23 @@ jobs:
     name: 'Tagged Release'
     runs-on: 'ubuntu-latest'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
+      - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: 'Build Artifact'
+      - name: 'Install dependencies'
+        run: npm ci
+      
+      - name: 'Build extension'
+        run: npm run build
+      
+      - name: 'Compress to Zip'
         run: |
-          npm ci
-          npm run build
           sudo apt-get install -y zip
-          zip -R asb_auto_subs . -i manifest.json dist css imgs
+          zip -r asb-auto-subs dist css imgs manifest.json
 
       - uses: 'marvinpinto/action-automatic-releases@latest'
         with:
