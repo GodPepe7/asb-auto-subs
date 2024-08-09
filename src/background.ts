@@ -26,10 +26,10 @@ type TitleAndEp = {
 
 async function alreadyDownloaded(title: string, episode: number) {
   const key = `${title}_${episode}`
-  const result = await chrome.storage.local.get([key])
+  const result = await chrome.storage.sync.get([key])
   console.log(result)
   if (Object.keys(result).length > 0) return true
-  await chrome.storage.local.set({ [key]: true })
+  await chrome.storage.sync.set({ [key]: true })
   return false
 }
 
@@ -66,7 +66,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
     console.log("inserting scripts")
     await chrome.scripting.insertCSS({ target: { tabId: details.tabId }, files: ["css/index.css"] })
     await chrome.scripting.executeScript({ target: { tabId: details.tabId }, files: ['dist/injectScript.js'] })
-    const result = await chrome.storage.local.get('apiKey')
+    const result = await chrome.storage.sync.get('apiKey')
     if (Object.keys(result).length === 0) {
       await chrome.tabs.sendMessage(details.tabId, { action: 'notifyUser', error: "Please set your jimaku API Key on https://jimaku.cc/ and set it by clicking the extension icon" })
       return
@@ -130,7 +130,7 @@ async function fetchAnilistId(title: string) {
 
 
 async function fetchSubs(anilistId: number, episode: number) {
-  const localStorageAPIKey = await chrome.storage.local.get("apiKey")
+  const localStorageAPIKey = await chrome.storage.sync.get("apiKey")
   const jimakuAPIKey = localStorageAPIKey["apiKey"]
   const BASE_URL = "https://jimaku.cc/api"
   try {
@@ -167,7 +167,7 @@ async function fetchSubs(anilistId: number, episode: number) {
         case 429:
           return `You downloaded too many subs in a short amount of time. Try again in ${searchResponse.headers.get("x-ratelimit-reset-after")} seconds`
         default:
-          return "`No subs for episode ${episode} could be found.`"
+          return `No subs for episode ${episode} could be found.`
       }
     }
     const subs: Subs[] = await filesResponse.json();
@@ -199,7 +199,7 @@ async function markMultipleAsDownloaded(filename: string, title: string) {
   }
   for (let i = episodes[0]; i < episodes[1]; i++) {
     const key = `${title}_${i}`
-    await chrome.storage.local.set({ [key]: true })
+    await chrome.storage.sync.set({ [key]: true })
   }
 }
 

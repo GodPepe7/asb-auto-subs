@@ -3,13 +3,17 @@
 
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="../css/popup.css">
 </head>
 
 <body>
   <form id="apiKeyForm">
-    <label for="apiKey">API Key:</label>
+    <label for="apiKey">Jimaku API Key</label>
     <input type="text" id="apiKey" name="apiKey" required>
-    <button type="submit">Submit</button>
+    <div class="set-container">
+      <button class="set-btn" type="submit">Set ↵</button>
+      <p class="key-info">API Key not set yet! Get it on <a href="https://jimaku.cc/login">jimaku</a></p>
+    </div>
   </form>
   <script src="../dist/popup.js"></script>
 </body>

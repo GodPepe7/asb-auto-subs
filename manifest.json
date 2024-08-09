@@ -21,7 +21,7 @@
   ],
   "action": {
     "default_popup": "html/popup.html",
-    "default_icon": "imgs/takodachi.png"
+    "default_icon": "imgs/logo.png"
   },
   "web_accessible_resources": [
     {

@@ -1,12 +1,16 @@
-console.log("popup.js getting executed")
-console.log(document.body.innerHTML)
-
 document.getElementById('apiKeyForm')?.addEventListener('submit', async function (event) {
-  console.log("test")
-  event.preventDefault(); // Prevent the default form submission
+  event.preventDefault();
   const inputAPIKey = (document.getElementById('apiKey') as HTMLInputElement).value;
-  console.log(`Set API Key: ${inputAPIKey}`)
-  await chrome.storage.local.set({ apiKey: inputAPIKey })
-  const result = await chrome.storage.local.get('apiKey')
-  console.log(result["apiKey"])
+  await chrome.storage.sync.set({ apiKey: inputAPIKey });
 });
+
+async function setApiKeyInfo() {
+  const storageItem = await chrome.storage.sync.get('apiKey');
+  console.log(storageItem)
+  if (Object.keys(storageItem).length === 0) return;
+  (document.getElementById('apiKey') as HTMLInputElement)!.value = storageItem['apiKey'];
+  const keyInfo = document.querySelector('.key-info');
+  keyInfo!.textContent = 'API Key set!';
+  keyInfo!.classList.add("set");
+}
+setApiKeyInfo();
