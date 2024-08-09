@@ -4,7 +4,9 @@
   "description": "Let me cook",
   "version": "0.0.4",
   "background": {
-    "service_worker": "dist/background.js"
+    "scripts": [
+      "dist/background.js"
+    ]
   },
   "permissions": [
     "activeTab",

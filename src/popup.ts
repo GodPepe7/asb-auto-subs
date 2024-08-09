@@ -2,6 +2,7 @@ document.getElementById('apiKeyForm')?.addEventListener('submit', async function
   event.preventDefault();
   const inputAPIKey = (document.getElementById('apiKey') as HTMLInputElement).value;
   await chrome.storage.sync.set({ apiKey: inputAPIKey });
+  setApiKeyInfo()
 });
 
 async function setApiKeyInfo() {

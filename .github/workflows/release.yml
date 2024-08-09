@@ -25,10 +25,19 @@ jobs:
       - name: 'Build extension'
         run: npm run build
       
-      - name: 'Compress to Zip'
+      - name: 'Chrome: Compress to Zip'
         run: |
           sudo apt-get install -y zip
-          zip -r asb-auto-subs dist html css imgs manifest.json
+          rm manifest.json
+          mv chrome-manifest.json manifest.json
+          zip -r asb-auto-subs-chrome dist html css imgs manifest.json
+
+      - name: 'Firefox: Compress to Zip'
+        run: |
+          sudo apt-get install -y zip
+          rm manifest.json
+          mv firefox-manifest.json manifest.json
+          zip -r asb-auto-subs-firefox dist html css imgs manifest.json
 
       - uses: 'marvinpinto/action-automatic-releases@latest'
         with:
