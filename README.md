@@ -14,6 +14,14 @@ To use the extension you have to do the following steps once:
 4. Create a [Jimaku Account](https://jimaku.cc/login)  and generate your [API Key](https://jimaku.cc/account)
 5. In your searchbar at the top click on the puzzle icon and click on the extension and submit the key
 
+# Build locally
+
+Prerequisite: Node 20 LTS installed
+
+1. `npm install`
+2. `npm run build`
+3. Replace manifest.json content with either firefox-manifest.json or chrome-manifest.json depending on what browser is used
+
 # To Do
 
 - [x] Notify user when no subs there (Or just add some UI/UX lol)

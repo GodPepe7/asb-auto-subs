@@ -1,7 +1,7 @@
 {
   "name": "asb-auto-subs",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.5",
+  "description": "An extension to automatically download the subtitle file of the currently played anime which can be used with ASB Player to add the subtitles to the video.",
   "main": "src/popup.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

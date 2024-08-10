@@ -10,7 +10,7 @@
     "strict": true,
     "types": [
       "chrome"
-    ],
+    ]
   },
   "include": [
     "src/**/*.ts"
