@@ -172,8 +172,7 @@ async function fetchSubs(anilistId: number, episode: number) {
     }
     const subs: Subs[] = await filesResponse.json();
     if (subs.length === 0) {
-      console.error(`no entries found for ${anilistId} episode ${episode}`)
-      return []
+      return `No subs for episode ${episode} could be found.`
     }
     return subs
   } catch (e) {

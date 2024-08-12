@@ -1,12 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "ASB Auto Subs",
+  "name": "ASB Auto Subs (Test)",
   "description": "An extension to automatically download the subtitle file of the currently played anime intended to be used with ASB Player to add the downloaded subtitles to the video.",
   "version": "0.0.5",
   "background": {
-    "scripts": [
-      "dist/background.js"
-    ]
+    "service_worker": "dist/background.js"
   },
   "permissions": [
     "activeTab",
@@ -32,15 +30,5 @@
         "https://animesuge.to/*"
       ]
     }
-  ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "asbautosubs@godpepe7.com",
-      "strict_min_version": "109.0"
-    },
-    "gecko_android ": {
-      "id": "asbautosubs@godpepe7.com",
-      "strict_min_version": "109.0"
-    }
-  }
+  ]
 }
