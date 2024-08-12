@@ -2,6 +2,8 @@
 
 A small chrome extension using the jimaku.cc API to automatically download japanese subtitles of the anime episode you are currently watching. Works on hianime.to, animesuge.to and more if needed.
 
+https://github.com/user-attachments/assets/b4f83acc-35f7-41b3-b687-2baa42a84b26
+
 # Instructions
 
 To use the extension you have to do the following steps once:
