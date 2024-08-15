@@ -5,7 +5,8 @@ export const animeSites = new Map<string, SiteSpecifics>([
     {
       titleQuery: "h2.film-name > a",
       epQuery: ".ssl-item.ep-item.active",
-      epPlayerRegEx: /https:\/\/hianime\.to\/watch\/.+\?ep=.+/
+      epPlayerRegEx: /https:\/\/hianime\.to\/watch\/.+\?ep=.+/,
+      syncData: "#syncData"
     }
   ],
   ["animesuge.to",

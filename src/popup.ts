@@ -7,7 +7,6 @@ document.getElementById('apiKeyForm')?.addEventListener('submit', async function
 
 async function setApiKeyInfo() {
   const storageItem = await chrome.storage.sync.get('apiKey');
-  console.log(storageItem)
   if (Object.keys(storageItem).length === 0) return;
   (document.getElementById('apiKey') as HTMLInputElement)!.value = storageItem['apiKey'];
   const keyInfo = document.querySelector('.key-info');
