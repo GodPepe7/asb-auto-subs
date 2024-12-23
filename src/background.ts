@@ -1,6 +1,5 @@
-import { animeSites } from "./animeSites"
-import { SiteSpecifics, AnilistIdAndEp, TitleAndEp, JimakuEntry, Subs, AnilistObject, } from "./types"
-
+import { AnimeSite, animeSites } from "./animeSites"
+import { AnimeMetaData, JimakuEntry, Subs, AnilistObject, } from "./types"
 async function alreadyDownloaded(id: number, episode: number) {
   const key = `${id}_${episode}`
   const result = await chrome.storage.local.get([key])
@@ -10,22 +9,21 @@ async function alreadyDownloaded(id: number, episode: number) {
   return false
 }
 
-function getSiteSpecifics(url: string) {
+function getAnimeSiteKey(url: string) {
   const baseDomainMatcher = /^(?:https?:\/\/)?(?:www\.)?([^\/:?#]+)/;
   const matches = url.match(baseDomainMatcher);
   if (!matches) {
-    return
+    return null
   }
-  const animeSiteBaseDomain = matches[1]
-  const siteSpecifics = animeSites.get(animeSiteBaseDomain)
-  if (!siteSpecifics) {
-    return
+  const animeSiteKey = matches[1]
+  const animeSite = animeSites.get(animeSiteKey)
+  if (!animeSite) {
+    return null
   }
-  const isOnEpisodePage = siteSpecifics.epPlayerRegEx.test(url)
-  if (!isOnEpisodePage) {
-    return
+  if (!animeSite.isOnEpSite) {
+    return null
   }
-  return siteSpecifics
+  return animeSiteKey
 }
 
 async function notifyError(tabId: number, error: string) {
@@ -69,27 +67,17 @@ async function fetchAnilistId(title: string) {
   }
 }
 
-async function getAnilistIdAndEpisode(tabId: number, siteSpecifics: SiteSpecifics) {
+async function getAnilistIdAndEpisode(tabId: number, animeSiteKey: string) {
   let anilistId, episode
-  if (siteSpecifics.syncData) {
-    const idAndEp: AnilistIdAndEp = await chrome.tabs.sendMessage(tabId, { action: 'getAnilistIdAndEpisode', siteSpecifics })
-    console.table(idAndEp)
-    if (!idAndEp.anilistId || !idAndEp.episode) {
-      return "Failed getting AnilistId and episode"
-    }
-    anilistId = idAndEp.anilistId
-    episode = idAndEp.episode
-  } else {
-    const titleAndEp: TitleAndEp = await chrome.tabs.sendMessage(tabId, { action: 'getTitleAndEp', siteSpecifics })
-    if (!titleAndEp.animeTitle || !titleAndEp.episode) {
-      return "Failed getting title and episode"
-    }
-    const id = await fetchAnilistId(titleAndEp.animeTitle)
-    if (!id) {
-      return "Failed fetching AnilistId"
-    }
+  const animeMetaData: AnimeMetaData = await chrome.tabs.sendMessage(tabId, { action: 'getAnimeMetaData', animeSiteKey })
+  console.table(animeMetaData)
+  if (!animeMetaData) return null
+  episode = animeMetaData.episode
+  anilistId = animeMetaData.anilistId
+  if (!anilistId) {
+    const id = await fetchAnilistId(animeMetaData.title)
+    if (!id) return "Failed fetching AnilistId"
     anilistId = id
-    episode = titleAndEp.episode
   }
   return { anilistId, episode }
 }
@@ -122,7 +110,7 @@ async function fetchSubs(anilistId: number, episode: number) {
       return `No subs found for this anime`
     }
     const id = jimakuEntry[0].id
-
+    console.log(`Jimaku ID: ${id}`)
     const filesResponse = await fetch(BASE_URL + `/entries/${id}/files?episode=${episode}`, {
       method: 'GET',
       headers: {
@@ -201,18 +189,19 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
   if (details.frameId !== 0) return
   chrome.tabs.get(details.tabId, async (tab) => {
     if (tab.url !== details.url) return
-    const siteSpecifics = getSiteSpecifics(tab.url)
-    if (!siteSpecifics) return
+    const animeSiteKey = getAnimeSiteKey(tab.url)
+    if (!animeSiteKey) return
     await chrome.scripting.insertCSS({ target: { tabId: details.tabId }, files: ["css/index.css"] })
     await chrome.scripting.executeScript({ target: { tabId: details.tabId }, files: ['dist/injectScript.js'] })
 
-    const result = await chrome.storage.sync.get('apiKey')
-    if (Object.keys(result).length === 0) {
+    const apiKey = await chrome.storage.sync.get('apiKey')
+    if (Object.keys(apiKey).length === 0) {
       notifyError(details.tabId, "Please set your jimaku API Key on https://jimaku.cc/ and set it by clicking the extension icon")
       return
     }
 
-    const idAndEp = await getAnilistIdAndEpisode(details.tabId, siteSpecifics)
+    const idAndEp = await getAnilistIdAndEpisode(details.tabId, animeSiteKey)
+    if (!idAndEp) return
     if (typeof idAndEp === "string") {
       notifyError(details.tabId, idAndEp)
       return

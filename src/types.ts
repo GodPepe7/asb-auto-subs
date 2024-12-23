@@ -1,18 +1,7 @@
-export type SiteSpecifics = {
-  titleQuery: string
-  epQuery: string
-  epPlayerRegEx: RegExp
-  syncData?: string
-}
-
-export type TitleAndEp = {
-  animeTitle: string
+export type AnimeMetaData = {
+  anilistId?: number
   episode: number
-}
-
-export type AnilistIdAndEp = {
-  anilistId: number
-  episode: number
+  title: string
 }
 
 export type Subs = {
