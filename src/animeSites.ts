@@ -13,7 +13,7 @@ class HiAnime implements AnimeSite {
     return title
   }
   isOnEpSite(url: string): boolean {
-    const epSiteRegEx = new RegExp('https:\/\/hianime\.to\/watch\/.+\?ep=.+')
+    const epSiteRegEx = new RegExp(/https:\/\/hianime\.to\/watch\/.+\?ep=.+/)
     return epSiteRegEx.test(url)
   }
   getEpisode(): number | null {
@@ -38,14 +38,14 @@ class Miruro implements AnimeSite {
     return title
   }
   isOnEpSite(url: string): boolean {
-    const epSiteRegEx = new RegExp('https:\/\/www\.miruro\.tv\/watch?id=\.+\?ep=.+')
+    const epSiteRegEx = new RegExp(/https:\/\/www\.miruro\.tv\/watch\?id=.+ep=.+/)
     return epSiteRegEx.test(url)
   }
   getEpisode(): number | null {
-    const epQuery = ".ep-number"
-    const episodeString = document.querySelector(epQuery)?.textContent
+    const urlParams = new URLSearchParams(window.location.search);
+    const episodeString = urlParams.get('ep');
     if (!episodeString) return null
-    return parseInt(episodeString.slice(0, -1))
+    return parseInt(episodeString)
   }
   getAnilistId(): number | null {
     const urlParams = new URLSearchParams(window.location.search);

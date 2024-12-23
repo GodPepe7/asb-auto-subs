@@ -2,11 +2,9 @@
   "manifest_version": 3,
   "name": "ASB Auto Subs",
   "description": "An extension to automatically download the subtitle file of the currently played anime intended to be used with ASB Player to add the downloaded subtitles to the video.",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "background": {
-    "scripts": [
-      "dist/background.js"
-    ]
+    "service_worker": "dist/background.js"
   },
   "permissions": [
     "activeTab",
@@ -29,18 +27,8 @@
       ],
       "matches": [
         "https://hianime.to/*",
-        "https://animesuge.to/*"
+        "https://www.miruro.tv/*"
       ]
     }
-  ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "asbautosubs@godpepe7.com",
-      "strict_min_version": "109.0"
-    },
-    "gecko_android ": {
-      "id": "asbautosubs@godpepe7.com",
-      "strict_min_version": "109.0"
-    }
-  }
+  ]
 }

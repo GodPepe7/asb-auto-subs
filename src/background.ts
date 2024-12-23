@@ -1,9 +1,8 @@
-import { AnimeSite, animeSites } from "./animeSites"
+import { animeSites } from "./animeSites"
 import { AnimeMetaData, JimakuEntry, Subs, AnilistObject, } from "./types"
 async function alreadyDownloaded(id: number, episode: number) {
   const key = `${id}_${episode}`
   const result = await chrome.storage.local.get([key])
-  console.log(result)
   if (Object.keys(result).length > 0) return true
   await chrome.storage.local.set({ [key]: true })
   return false
@@ -20,7 +19,7 @@ function getAnimeSiteKey(url: string) {
   if (!animeSite) {
     return null
   }
-  if (!animeSite.isOnEpSite) {
+  if (!animeSite.isOnEpSite(url)) {
     return null
   }
   return animeSiteKey
@@ -110,7 +109,6 @@ async function fetchSubs(anilistId: number, episode: number) {
       return `No subs found for this anime`
     }
     const id = jimakuEntry[0].id
-    console.log(`Jimaku ID: ${id}`)
     const filesResponse = await fetch(BASE_URL + `/entries/${id}/files?episode=${episode}`, {
       method: 'GET',
       headers: {
@@ -185,10 +183,13 @@ async function downloadSubs(anilistId: number, episode: number) {
   return
 }
 
+let lastProcessedUrl = ""
+
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
   if (details.frameId !== 0) return
   chrome.tabs.get(details.tabId, async (tab) => {
-    if (tab.url !== details.url) return
+    if (tab.url !== details.url || lastProcessedUrl == details.url) return
+    lastProcessedUrl = tab.url
     const animeSiteKey = getAnimeSiteKey(tab.url)
     if (!animeSiteKey) return
     await chrome.scripting.insertCSS({ target: { tabId: details.tabId }, files: ["css/index.css"] })
@@ -196,7 +197,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
 
     const apiKey = await chrome.storage.sync.get('apiKey')
     if (Object.keys(apiKey).length === 0) {
-      notifyError(details.tabId, "Please set your jimaku API Key on https://jimaku.cc/ and set it by clicking the extension icon")
+      notifyError(details.tabId, "Please get your jimaku API Key from https://jimaku.cc/ and set it by clicking the extension icon")
       return
     }
 
