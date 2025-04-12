@@ -5,7 +5,7 @@ export interface AnimeSite {
   getTitle(): string | null
 }
 
-class HiAnime implements AnimeSite {
+class hianimez implements AnimeSite {
   getTitle(): string | null {
     const titleQuery = "h2.film-name > a"
     let title = document.querySelector(titleQuery)?.textContent
@@ -13,7 +13,7 @@ class HiAnime implements AnimeSite {
     return title
   }
   isOnEpSite(url: string): boolean {
-    const epSiteRegEx = new RegExp(/https:\/\/hianime\.to\/watch\/.+\?ep=.+/)
+    const epSiteRegEx = new RegExp(/https:\/\/hianimez\.to\/watch\/.+\?ep=.+/)
     return epSiteRegEx.test(url)
   }
   getEpisode(): number | null {
@@ -56,6 +56,6 @@ class Miruro implements AnimeSite {
 }
 
 export const animeSites = new Map<string, AnimeSite>([
-  ["hianime.to", new HiAnime()],
+  ["hianimez.to", new hianimez()],
   ["miruro.tv", new Miruro()],
 ])
