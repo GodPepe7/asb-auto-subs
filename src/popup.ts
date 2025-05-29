@@ -14,3 +14,15 @@ async function setApiKeyInfo() {
   keyInfo!.classList.add("set");
 }
 setApiKeyInfo();
+
+document.getElementById('autoDelete')?.addEventListener('change', async function (event) {
+  const autoDelete = (event.target as HTMLInputElement).checked;
+  await chrome.storage.sync.set({ autoDelete });
+})
+
+async function loadSettings() {
+  const autoDelete = <boolean>(await chrome.storage.sync.get('autoDelete')).autoDelete;
+  const autoDeleteCheckbox = <HTMLInputElement>document.getElementById('autoDelete');
+  autoDeleteCheckbox.checked = autoDelete;
+}
+loadSettings()

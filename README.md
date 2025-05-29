@@ -16,7 +16,7 @@ To use the extension you have to do the following steps once:
     - open "chrome://extensions/", click on "Load Unpacked" and select the unzipped extension
 2. Create a [Jimaku Account](https://jimaku.cc/login)  and generate your [API Key](https://jimaku.cc/account)
 3. In your searchbar at the top click on the puzzle icon and click on the extension and submit the key
-4. Go to any anime episode on hianime or animesuge and it should download the subtitles automatically
+4. Go to any anime episode on hianimez or miruro and it should download the subtitles automatically
 
 # Build locally
 

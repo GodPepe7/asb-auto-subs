@@ -55,3 +55,14 @@ body {
 a {
   color: blue
 }
+
+.settings-container {
+  margin-top: 12px;
+}
+
+.settings-content {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

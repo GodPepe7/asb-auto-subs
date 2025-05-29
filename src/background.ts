@@ -1,5 +1,9 @@
 import { animeSites } from "./animeSites"
 import { AnimeMetaData, JimakuEntry, Subs, AnilistObject, } from "./types"
+
+let lastProcessedUrl = ""
+let lastDownloadedSubId: number;
+
 async function alreadyDownloaded(id: number, episode: number) {
   const key = `${id}_${episode}`
   const result = await chrome.storage.local.get([key])
@@ -151,7 +155,6 @@ async function markMultipleAsDownloaded(filename: string, anilistId: number) {
   }
 }
 
-
 async function downloadSubs(anilistId: number, episode: number) {
   const subs = await fetchSubs(anilistId, episode)
   if (typeof subs === "string") {
@@ -170,12 +173,13 @@ async function downloadSubs(anilistId: number, episode: number) {
 
   chrome.downloads.download({
     url,
-    filename: name,
+    filename: `subs/${name}`,
     saveAs: false
-  }, async () => {
+  }, async (downloadId) => {
     if (chrome.runtime.lastError) {
       return chrome.runtime.lastError.message;
     }
+    lastDownloadedSubId = downloadId;
     if (name.endsWith(".zip") || name.endsWith(".rar")) {
       await markMultipleAsDownloaded(name, anilistId);
     }
@@ -183,12 +187,16 @@ async function downloadSubs(anilistId: number, episode: number) {
   return
 }
 
-let lastProcessedUrl = ""
+async function removeLastDownloaded() {
+  const autoDelete = <boolean>(await chrome.storage.sync.get('autoDelete')).autoDelete;
+  if (autoDelete) await chrome.downloads.removeFile(lastDownloadedSubId);
+}
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
   if (details.frameId !== 0) return
   chrome.tabs.get(details.tabId, async (tab) => {
-    if (tab.url !== details.url || lastProcessedUrl == details.url) return
+    if (tab.url !== details.url || lastProcessedUrl === details.url) return
+    if (lastDownloadedSubId) await removeLastDownloaded();
     lastProcessedUrl = tab.url
     const animeSiteKey = getAnimeSiteKey(tab.url)
     if (!animeSiteKey) return
