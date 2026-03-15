@@ -1,62 +1,61 @@
 export interface AnimeSite {
-  isOnEpSite(url: string): boolean
-  getEpisode(): number | null
-  getAnilistId(): number | null
-  getTitle(): string | null
+  isOnEpSite(url: string): boolean;
+  getEpisode(): number | null;
+  getAnilistId(): number | null;
+  getTitle(): string | null;
 }
 
 class hianime implements AnimeSite {
   getTitle(): string | null {
-    const titleQuery = "h2.film-name > a"
-    let title = document.querySelector(titleQuery)?.textContent
-    if (!title) return null
-    return title
+    const titleQuery = "h2.film-name > a";
+    let title = document.querySelector(titleQuery)?.textContent;
+    if (!title) return null;
+    return title;
   }
   isOnEpSite(url: string): boolean {
-    const epSiteRegEx = new RegExp(/https:\/\/hianimez?\.to\/watch\/.+\?ep=.+/)
-    return epSiteRegEx.test(url)
+    const epSiteRegEx = new RegExp(/https:\/\/hianimez?\.to\/watch\/.+\?ep=.+/);
+    return epSiteRegEx.test(url);
   }
   getEpisode(): number | null {
-    const epQuery = ".ssl-item.ep-item.active"
-    let episodeString = document.querySelector(epQuery)?.textContent
-    if (!episodeString) return null
-    return parseInt(episodeString)
+    const epQuery = ".ssl-item.ep-item.active";
+    let episodeString = document.querySelector(epQuery)?.textContent;
+    if (!episodeString) return null;
+    return parseInt(episodeString);
   }
   getAnilistId(): number | null {
-    const syncDataQuery = "#syncData"
-    const syncData = document.querySelector(syncDataQuery)?.textContent
-    if (!syncData) return null
-    return parseInt(JSON.parse(syncData).anilist_id)
+    const syncDataQuery = "#syncData";
+    const syncData = document.querySelector(syncDataQuery)?.textContent;
+    if (!syncData) return null;
+    return parseInt(JSON.parse(syncData).anilist_id);
   }
 }
 
 class Miruro implements AnimeSite {
   getTitle(): string | null {
-    const titleQuery = ".anime-title > a"
-    let title = document.querySelector(titleQuery)?.textContent
-    if (!title) return null
-    return title
+    const titleQuery = ".anime-title > a";
+    let title = document.querySelector(titleQuery)?.textContent;
+    if (!title) return null;
+    return title;
   }
   isOnEpSite(url: string): boolean {
-    const epSiteRegEx = new RegExp(/https:\/\/www\.miruro\.tv\/watch\?id=.+ep=.+/)
-    return epSiteRegEx.test(url)
+    const epSiteRegEx = new RegExp(
+      /https:\/\/www\.miruro\.tv\/watch\/.+\/episode-\d+/,
+    );
+    return epSiteRegEx.test(url);
   }
   getEpisode(): number | null {
-    const urlParams = new URLSearchParams(window.location.search);
-    const episodeString = urlParams.get('ep');
-    if (!episodeString) return null
-    return parseInt(episodeString)
+    const match = window.location.pathname.match(/\/episode-(\d+)/);
+    if (!match) return null;
+    return parseInt(match[1]);
   }
   getAnilistId(): number | null {
-    const urlParams = new URLSearchParams(window.location.search);
-    const anilistIdString = urlParams.get('id');
-    if (!anilistIdString) return null
-    return parseInt(anilistIdString)
+    const match = window.location.pathname.match(/\/watch\/(\d+)/);
+    if (!match) return null;
+    return parseInt(match[1]);
   }
 }
 
 export const animeSites = new Map<string, AnimeSite>([
   ["hianime.to", new hianime()],
-  ["hianimez.to", new hianime()],
   ["miruro.tv", new Miruro()],
-])
+]);

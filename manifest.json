@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ASB Auto Subs",
+  "name": "ASB Auto Subs-DEV",
   "description": "An extension to automatically download the subtitle file of the currently played anime intended to be used with ASB Player to add the downloaded subtitles to the video.",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "background": {
     "service_worker": "dist/background.js"
   },
@@ -13,22 +13,18 @@
     "storage",
     "webNavigation"
   ],
-  "host_permissions": [
-    "https://*/"
-  ],
+  "host_permissions": ["https://*/"],
   "action": {
     "default_popup": "html/popup.html",
     "default_icon": "imgs/logo.png"
   },
   "web_accessible_resources": [
     {
-      "resources": [
-        "css/index.css"
-      ],
+      "resources": ["css/index.css"],
       "matches": [
         "https://hianimez.to/*",
         "https://hianime.to/*",
-        "https://www.miruro.tv/*"
+        "https://miruro.tv/*"
       ]
     }
   ]
