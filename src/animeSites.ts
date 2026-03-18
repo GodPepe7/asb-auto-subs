@@ -39,12 +39,12 @@ class Miruro implements AnimeSite {
   }
   isOnEpSite(url: string): boolean {
     const epSiteRegEx = new RegExp(
-      /https:\/\/www\.miruro\.tv\/watch\/.+\/episode-\d+/,
+      /https:\/\/(?:www\.)?miruro\.[a-z]+\/watch\/.+(?:\/episode-\d+|\?ep=\d+)/,
     );
     return epSiteRegEx.test(url);
   }
   getEpisode(): number | null {
-    const match = window.location.pathname.match(/\/episode-(\d+)/);
+    const match = window.location.href.match(/(?:\/episode-|\?ep=)(\d+)/);
     if (!match) return null;
     return parseInt(match[1]);
   }
@@ -58,4 +58,6 @@ class Miruro implements AnimeSite {
 export const animeSites = new Map<string, AnimeSite>([
   ["hianime.to", new hianime()],
   ["miruro.tv", new Miruro()],
+  ["miruro.online", new Miruro()],
+  ["miruro.to", new Miruro()],
 ]);

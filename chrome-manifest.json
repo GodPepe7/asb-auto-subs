@@ -23,6 +23,8 @@
       "resources": ["css/index.css"],
       "matches": [
         "https://hianime.to/*",
+        "https://miruro.tv/*",
+        "https://miruro.tv/*",
         "https://miruro.tv/*"
       ]
     }

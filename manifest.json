@@ -24,7 +24,9 @@
       "matches": [
         "https://hianimez.to/*",
         "https://hianime.to/*",
-        "https://miruro.tv/*"
+        "https://miruro.tv/*",
+        "https://miruro.online/*",
+        "https://miruro.to/*"
       ]
     }
   ]
