@@ -1,7 +1,7 @@
 import { animeSites } from "./animeSites";
 import { AnimeMetaData, JimakuEntry, Subs, AnilistObject } from "./types";
 
-const lasDownloadedKeyName = "lastDownloadedKey";
+const lastDownloadedKeyName = "lastDownloadedKey";
 let lastProcessedUrl = "";
 
 async function alreadyDownloaded(id: number, episode: number) {
@@ -196,8 +196,10 @@ async function downloadSubs(anilistId: number, episode: number) {
         await markMultipleAsDownloaded(name, anilistId);
       } else {
         const key = `${anilistId}_${episode}`;
-        await chrome.storage.local.set({ [lasDownloadedKeyName]: key });
-        await chrome.storage.local.set({ [key]: downloadId });
+        await chrome.storage.local.set({
+          [lastDownloadedKeyName]: key,
+          [key]: downloadId,
+        });
       }
     },
   );
@@ -210,8 +212,8 @@ async function removeLastDownloaded() {
   );
   if (autoDelete)  {
     let lastDownloadedKey: string;
-    lastDownloadedKey = (await chrome.storage.local.get(lasDownloadedKeyName))[lasDownloadedKeyName];
-    await chrome.storage.local.get(lastDownloadedKey, async (result) => {
+    lastDownloadedKey = (await chrome.storage.local.get(lastDownloadedKeyName))[lastDownloadedKeyName];
+    chrome.storage.local.get(lastDownloadedKey, async (result) => {
       if (Object.keys(result).length === 0) return;
       const downloadId = result[lastDownloadedKey];
       if (downloadId === true) return;
