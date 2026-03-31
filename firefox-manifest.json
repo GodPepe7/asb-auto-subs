@@ -21,7 +21,7 @@
   "web_accessible_resources": [
     {
       "resources": ["css/index.css"],
-      "matches": ["https://hianime.to/*", "https://miruro.tv/*"]
+      "matches": ["https://hianime.to/*", "https://miruro.tv/*", "https://miruro.online/*", "https://miruro.to/*"]
     }
   ],
   "browser_specific_settings": {

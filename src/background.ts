@@ -1,8 +1,8 @@
 import { animeSites } from "./animeSites";
 import { AnimeMetaData, JimakuEntry, Subs, AnilistObject } from "./types";
 
+const lastDownloadedKeyName = "lastDownloadedKey";
 let lastProcessedUrl = "";
-let lastDownloadedSubId: number;
 
 async function alreadyDownloaded(id: number, episode: number) {
   const key = `${id}_${episode}`;
@@ -192,9 +192,14 @@ async function downloadSubs(anilistId: number, episode: number) {
       if (chrome.runtime.lastError) {
         return chrome.runtime.lastError.message;
       }
-      lastDownloadedSubId = downloadId;
       if (name.endsWith(".zip") || name.endsWith(".rar")) {
         await markMultipleAsDownloaded(name, anilistId);
+      } else {
+        const key = `${anilistId}_${episode}`;
+        await chrome.storage.local.set({
+          [lastDownloadedKeyName]: key,
+          [key]: downloadId,
+        });
       }
     },
   );
@@ -205,14 +210,24 @@ async function removeLastDownloaded() {
   const autoDelete = <boolean>(
     (await chrome.storage.sync.get("autoDelete")).autoDelete
   );
-  if (autoDelete) await chrome.downloads.removeFile(lastDownloadedSubId);
+  if (autoDelete)  {
+    let lastDownloadedKey: string;
+    lastDownloadedKey = (await chrome.storage.local.get(lastDownloadedKeyName))[lastDownloadedKeyName];
+    chrome.storage.local.get(lastDownloadedKey, async (result) => {
+      if (Object.keys(result).length === 0) return;
+      const downloadId = result[lastDownloadedKey];
+      if (downloadId === true) return;
+      await chrome.downloads.removeFile(downloadId);
+      await chrome.storage.local.remove(lastDownloadedKey);
+    });
+  }
 }
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
   if (details.frameId !== 0) return;
   chrome.tabs.get(details.tabId, async (tab) => {
     if (tab.url !== details.url || lastProcessedUrl === details.url) return;
-    if (lastDownloadedSubId) await removeLastDownloaded();
+    await removeLastDownloaded();
     lastProcessedUrl = tab.url;
     const animeSiteKey = getAnimeSiteKey(tab.url);
     if (!animeSiteKey) return;
